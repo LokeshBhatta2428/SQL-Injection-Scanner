@@ -1,49 +1,58 @@
 from concurrent.futures import ThreadPoolExecutor
 import config
-import payloads
+import payload
 import requester
 import detector
 import auth
 import logger
 
 
-def scan_payload(session, payload):
-    print(f"Testing: {payload}")
+def scan_payload(payload_str):
+    """Each thread creates its own session to avoid thread-safety issues."""
+    session = auth.login()
+    print(f"Testing: {payload_str}")
 
     try:
-        response = requester.send_request(session, payload)
+        response, elapsed = requester.send_request(session, payload_str)
 
         # Error-based detection
         if detector.error_based_detection(response.text):
-            result = f"[!] Error-based SQLi detected: {payload}"
+            result = f"[!] Error-based SQLi detected: {payload_str}"
             print(result)
             logger.log_result(result)
 
         # Time-based detection
-        if "SLEEP" in payload.upper():
-            if detector.time_based_detection(session, payload):
-                result = f"[!] Time-based SQLi detected: {payload}"
+        if "SLEEP" in payload_str.upper():
+            if detector.time_based_detection(elapsed):
+                result = f"[!] Time-based SQLi detected: {payload_str}"
                 print(result)
                 logger.log_result(result)
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error testing payload '{payload_str}': {e}")
 
 
 def main():
     print("=== SQL Injection Scanner ===")
 
-    # Login
-    session = auth.login()
-    print("[+] Logged into DVWA")
+    # Verify login works before launching threads
+    try:
+        auth.login()
+        print("[+] Logged into DVWA successfully")
+    except Exception as e:
+        print(e)
+        return
 
     # Load payloads
-    all_payloads = payloads.load_payloads()
+    all_payloads = payload.load_payloads()
+    print(f"[+] Loaded {len(all_payloads)} payloads")
 
-    # Multithreading
+    # Multithreading — each thread handles its own session
     with ThreadPoolExecutor(max_workers=config.THREADS) as executor:
-        for payload in all_payloads:
-            executor.submit(scan_payload, session, payload)
+        for p in all_payloads:
+            executor.submit(scan_payload, p)
+
+    print("[+] Scan complete. Results saved to datafiles/results.txt")
 
 
 if __name__ == "__main__":
