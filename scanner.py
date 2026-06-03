@@ -7,9 +7,7 @@ import auth
 import logger
 
 
-def scan_payload(payload_str):
-    """Each thread creates its own session to avoid thread-safety issues."""
-    session = auth.login()
+def scan_payload(session, payload_str):
     print(f"Testing: {payload_str}")
 
     try:
@@ -20,9 +18,12 @@ def scan_payload(payload_str):
             result = f"[!] Error-based SQLi detected: {payload_str}"
             print(result)
             logger.log_result(result)
+        else:
+            print(f"[-] No match for: {payload_str}")
 
         # Time-based detection
-        if "SLEEP" in payload_str.upper():
+        if "SLEEP" in payload_str.upper() or "WAITFOR" in payload_str.upper():
+            print(f"[*] Elapsed time: {elapsed:.2f}s")
             if detector.time_based_detection(elapsed):
                 result = f"[!] Time-based SQLi detected: {payload_str}"
                 print(result)
@@ -35,9 +36,9 @@ def scan_payload(payload_str):
 def main():
     print("=== SQL Injection Scanner ===")
 
-    # Verify login works before launching threads
+    # Single login — reuse same session for all payloads
     try:
-        auth.login()
+        session = auth.login()
         print("[+] Logged into DVWA successfully")
     except Exception as e:
         print(e)
@@ -47,10 +48,10 @@ def main():
     all_payloads = payload.load_payloads()
     print(f"[+] Loaded {len(all_payloads)} payloads")
 
-    # Multithreading — each thread handles its own session
+    # Multithreading — pass the same session
     with ThreadPoolExecutor(max_workers=config.THREADS) as executor:
         for p in all_payloads:
-            executor.submit(scan_payload, p)
+            executor.submit(scan_payload, session, p)
 
     print("[+] Scan complete. Results saved to datafiles/results.txt")
 

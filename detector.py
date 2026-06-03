@@ -11,3 +11,4 @@ def error_based_detection(response_text):
 def time_based_detection(elapsed):
     """Check if response took longer than 4 seconds (indicates SLEEP payload worked)."""
     return elapsed > 4
+
